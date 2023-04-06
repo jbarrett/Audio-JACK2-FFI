@@ -108,7 +108,7 @@ sub _jack_get_version {
 
 }
 
-1;
+__END__
 
 =pod
 

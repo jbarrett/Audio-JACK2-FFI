@@ -1,1 +1,17 @@
-lib/Audio/JACK2/FFI.pm
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+Audio::JACK2::FFI - bindings for the JACK Audio Connection Kit API version 2.
+
+=head1 VERSION
+
+version 0.00
+
+=head1 SYNOPSIS
+
+Run away quite fast.
+
+=cut

@@ -14,6 +14,7 @@ my $enum_JackStatus;
 my $enum_JackLatencyCallbackMode;
 my $defines;
 my $types;
+my $callback_types;
 my $binds;
 my $ffi;
 BEGIN {
@@ -68,10 +69,19 @@ BEGIN {
         jack_status_t => 'enum',
         jack_latency_callback_mode_t => 'enum',
 
+
+    };
+
+    $callback_types = {
+        JackProcessCallback => '(jack_nframes_t,opaque)->int',
     };
 
     for my $type ( keys %{ $types } ) {
         $ffi->type( $types->{ $type } => $type )
+    }
+
+    for my $type ( keys %{ $callback_types } ) {
+        $ffi->type( $callback_types->{ $type } => $type )
     }
 
     $binds = {
@@ -100,7 +110,7 @@ BEGIN {
         # jack_set_process_thread
         # jack_set_thread_init_callback
         # jack_on_info_shutdown 
-        # jack_set_process_callback 
+        jack_set_process_callback   => [ [ 'jack_client_t', 'JackProcessCallback', 'opaque' ] => 'int', \&_jack_set_process_callback ],
         # jack_set_freewheel_callback 
         # jack_set_buffer_size_callback 
         # jack_set_sample_rate_callback 
@@ -124,11 +134,23 @@ sub _jack_get_version {
 
 }
 
+sub _jack_set_process_callback {
+    my ( $jack_set_process_callback, $client, $callback, $arg, $sticky ) = @_;
+    $sticky //= 1;
+    my $callback_wrapped = sub {
+        my ( $nframes ) = @_;
+        $callback->( $nframes, $arg );
+    };
+    my $closure = $ffi->closure( $callback_wrapped );
+    $closure->sticky if $sticky;
+    $jack_set_process_callback->( $client, $closure, \$arg );
+    return $closure;
+}
+
 for my $fn ( keys %{ $binds } ) {
     my @sig = @{ $binds->{ $fn } };
     $ffi->attach( $fn => @sig );
 }
-
 
 our @EXPORT = (
     keys %{ $enum_JackOptions },
